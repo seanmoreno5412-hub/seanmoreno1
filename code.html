@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Do You Like Me?</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Nunito & Pacifico for a cute, romantic vibe -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&family=Pacifico&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            overflow: hidden; /* Prevent scrollbars when the button moves near edges */
+            user-select: none; /* Prevent accidental text selection on rapid clicks */
+        }
+
+        .font-romantic {
+            font-family: 'Pacifico', cursive;
+        }
+
+        /* Smooth transition for the evasive 'No' button */
+        #no-btn {
+            transition: left 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* Floating background ambient hearts */
+        @keyframes floatUp {
+            0% {
+                transform: translateY(100vh) scale(0.5) rotate(0deg);
+                opacity: 0;
+            }
+            20% {
+                opacity: 0.6;
+            }
+            80% {
+                opacity: 0.6;
+            }
+            100% {
+                transform: translateY(-10vh) scale(1.2) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .ambient-heart {
+            position: fixed;
+            pointer-events: none;
+            z-index: 0;
+            animation: floatUp linear infinite;
+        }
+
+        /* Burst/Pop heart animation on 'Yes' click */
+        @keyframes popHeart {
+            0% {
+                transform: translate(0, 0) scale(0.2);
+                opacity: 1;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--tx), var(--ty)) scale(1.5) rotate(var(--rot));
+                opacity: 0;
+            }
+        }
+
+        .burst-heart {
+            position: fixed;
+            pointer-events: none;
+            z-index: 50;
+            animation: popHeart 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Gentle heartbeat pulse for the main SVG mascot */
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            15% { transform: scale(1.12); }
+            30% { transform: scale(1); }
+            45% { transform: scale(1.08); }
+            60% { transform: scale(1); }
+        }
+
+        .animate-heartbeat {
+            animation: heartbeat 2s infinite;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-pink-100 via-rose-100 to-red-100 min-h-screen flex items-center justify-center p-4 relative">
+
+    <!-- Container for ambient background hearts -->
+    <div id="ambient-container" class="fixed inset-0 pointer-events-none overflow-hidden"></div>
+
+    <!-- Main Interactive Card -->
+    <main id="main-card" class="relative z-10 bg-white/80 backdrop-blur-md border-2 border-pink-200 rounded-3xl shadow-2xl p-8 sm:p-12 max-w-md w-full text-center transition-all duration-500 transform">
+        
+        <!-- Question State -->
+        <div id="question-view" class="flex flex-col items-center">
+            <!-- Cute Animated Heart Mascot SVG -->
+            <div class="w-28 h-28 mb-6 animate-heartbeat">
+                <svg viewBox="0 0 200 200" class="w-full h-full drop-shadow-md">
+                    <!-- Heart Body -->
+                    <path d="M100 180 C100 180 20 125 20 65 C20 35 45 15 70 15 C85 15 95 25 100 35 C105 25 115 15 130 15 C155 15 180 35 180 65 C180 125 100 180 100 180 Z" fill="#fb7185"/>
+                    <!-- Highlight -->
+                    <path d="M45 45 C45 35 55 30 65 30" stroke="#ffe4e6" stroke-width="6" stroke-linecap="round" fill="none"/>
+                    <!-- Cute Eyes -->
+                    <circle cx="72" cy="85" r="8" fill="#4c0519"/>
+                    <circle cx="74" cy="83" r="3" fill="#ffffff"/>
+                    <circle cx="128" cy="85" r="8" fill="#4c0519"/>
+                    <circle cx="130" cy="83" r="3" fill="#ffffff"/>
+                    <!-- Rosy Cheeks -->
+                    <ellipse cx="58" cy="98" rx="10" ry="6" fill="#f43f5e" opacity="0.6"/>
+                    <ellipse cx="142" cy="98" rx="10" ry="6" fill="#f43f5e" opacity="0.6"/>
+                    <!-- Sweet Smile -->
+                    <path d="M88 102 Q100 115 112 102" stroke="#4c0519" stroke-width="5" stroke-linecap="round" fill="none"/>
+                </svg>
+            </div>
+
+            <!-- Question Text -->
+            <h1 class="font-romantic text-4xl sm:text-5xl text-rose-600 mb-3 tracking-wide">
+                Do you like me?
+            </h1>
+            <p id="subtext" class="text-rose-400 font-semibold text-base sm:text-lg mb-8 h-6">
+                Please be honest... 🥺
+            </p>
+
+            <!-- Buttons Container -->
+            <div class="flex items-center justify-center gap-6 w-full min-h-[60px]">
+                <!-- Yes Button -->
+                <button id="yes-btn" class="bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-extrabold text-xl px-8 py-3.5 rounded-full shadow-lg shadow-rose-300/50 transform transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer z-20">
+                    Yes! 💖
+                </button>
+
+                <!-- No Button (Starts inside flex layout, becomes fixed on first interaction) -->
+                <button id="no-btn" class="bg-rose-100 hover:bg-rose-200 text-rose-600 border-2 border-rose-300 font-bold text-xl px-8 py-3.5 rounded-full shadow-md cursor-pointer z-30">
+                    No
+                </button>
+            </div>
+        </div>
+
+        <!-- Celebration / 'Yes' Clicked State (Hidden initially) -->
+        <div id="celebration-view" class="hidden flex-col items-center py-4">
+            <!-- Big Glowing Heart SVG -->
+            <div class="w-36 h-36 mb-6 animate-heartbeat">
+                <svg viewBox="0 0 200 200" class="w-full h-full drop-shadow-xl">
+                    <defs>
+                        <linearGradient id="loveGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#f43f5e"/>
+                            <stop offset="100%" stop-color="#e11d48"/>
+                        </linearGradient>
+                    </defs>
+                    <path d="M100 180 C100 180 20 125 20 65 C20 35 45 15 70 15 C85 15 95 25 100 35 C105 25 115 15 130 15 C155 15 180 35 180 65 C180 125 100 180 100 180 Z" fill="url(#loveGrad)"/>
+                    <!-- Happy Closed Eyes -->
+                    <path d="M62 85 Q72 72 82 85" stroke="#fff1f2" stroke-width="5" stroke-linecap="round" fill="none"/>
+                    <path d="M118 85 Q128 72 138 85" stroke="#fff1f2" stroke-width="5" stroke-linecap="round" fill="none"/>
+                    <!-- Big Happy Smile -->
+                    <path d="M82 102 Q100 125 118 102 Z" fill="#fff1f2"/>
+                </svg>
+            </div>
+
+            <h2 class="font-romantic text-5xl sm:text-6xl text-rose-600 mb-4 drop-shadow-sm">
+                I love you!
+            </h2>
+            <p class="text-rose-500 font-bold text-lg sm:text-xl mb-8">
+                You just made me the happiest person ever! 🥰✨
+            </p>
+
+            <button id="replay-btn" class="bg-rose-100 hover:bg-rose-200 text-rose-600 font-bold text-sm px-6 py-2.5 rounded-full transition-colors cursor-pointer">
+                Ask me again ↺
+            </button>
+        </div>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const yesBtn = document.getElementById('yes-btn');
+            const noBtn = document.getElementById('no-btn');
+            const replayBtn = document.getElementById('replay-btn');
+            const questionView = document.getElementById('question-view');
+            const celebrationView = document.getElementById('celebration-view');
+            const subtext = document.getElementById('subtext');
+            const ambientContainer = document.getElementById('ambient-container');
+
+            // Playful messages that cycle as the user tries to click 'No'
+            const teasingMessages = [
+                "Are you sure? 🤔",
+                "Oops, missed me! 😜",
+                "Nice try! 💨",
+                "Wrong button! 👉💖",
+                "You can't catch me! 🏃‍♂️",
+                "Think again! 🥺",
+                "Just click Yes already! 💕"
+            ];
+
+            let dodgeCount = 0;
+            let yesScale = 1;
+            let isButtonDetached = false;
+
+            /**
+             * Spawns continuous gentle floating hearts in the background
+             */
+            function createAmbientHearts() {
+                const heartSymbols = ['💖', '💗', '💓', '🌸', '💕'];
+                for (let i = 0; i < 15; i++) {
+                    const heart = document.createElement('div');
+                    heart.classList.add('ambient-heart');
+                    heart.innerText = heartSymbols[Math.floor(Math.random() * heartSymbols.length)];
+                    heart.style.left = `${Math.random() * 100}vw`;
+                    heart.style.fontSize = `${Math.random() * 1.2 + 0.8}rem`;
+                    heart.style.animationDuration = `${Math.random() * 8 + 7}s`;
+                    heart.style.animationDelay = `${Math.random() * 5}s`;
+                    ambientContainer.appendChild(heart);
+                }
+            }
+
+            /**
+             * Moves the 'No' button to a safe random position inside the viewport
+             */
+            function dodgeButton(e) {
+                if (e) e.preventDefault();
+
+                // Detach from flex container on first hover/touch so it can roam the whole screen
+                if (!isButtonDetached) {
+                    const rect = noBtn.getBoundingClientRect();
+                    noBtn.style.position = 'fixed';
+                    noBtn.style.left = `${rect.left}px`;
+                    noBtn.style.top = `${rect.top}px`;
+                    // Append directly to body so backdrop-filter on main card doesn't trap fixed positioning
+                    document.body.appendChild(noBtn);
+                    isButtonDetached = true;
+                }
+
+                // Calculate safe boundaries within the viewport with padding
+                const padding = 24;
+                const btnWidth = noBtn.offsetWidth;
+                const btnHeight = noBtn.offsetHeight;
+                const maxX = window.innerWidth - btnWidth - padding;
+                const maxY = window.innerHeight - btnHeight - padding;
+
+                // Ensure random coordinates stay well within visible screen bounds
+                const randomX = Math.max(padding, Math.floor(Math.random() * maxX));
+                const randomY = Math.max(padding, Math.floor(Math.random() * maxY));
+
+                // Apply new coordinates
+                noBtn.style.left = `${randomX}px`;
+                noBtn.style.top = `${randomY}px`;
+
+                // Update teasing subtext
+                subtext.innerText = teasingMessages[dodgeCount % teasingMessages.length];
+                dodgeCount++;
+
+                // Slightly grow the 'Yes' button each time to make it more enticing
+                yesScale = Math.min(yesScale + 0.08, 1.8);
+                yesBtn.style.transform = `scale(${yesScale})`;
+            }
+
+            /**
+             * Creates an explosion of popping hearts across the screen
+             */
+            function triggerHeartExplosion() {
+                const heartEmojis = ['❤️', '💖', '💕', '💗', '💓', '💘', '💝'];
+                const totalHearts = 45;
+
+                for (let i = 0; i < totalHearts; i++) {
+                    const heart = document.createElement('div');
+                    heart.classList.add('burst-heart');
+                    heart.innerText = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
+                    
+                    // Start near the center of the screen
+                    const startX = window.innerWidth / 2;
+                    const startY = window.innerHeight / 2;
+                    heart.style.left = `${startX}px`;
+                    heart.style.top = `${startY}px`;
+                    heart.style.fontSize = `${Math.random() * 1.8 + 1}rem`;
+
+                    // Random outward trajectory
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = Math.random() * (Math.max(window.innerWidth, window.innerHeight) * 0.6) + 80;
+                    const tx = Math.cos(angle) * distance;
+                    const ty = Math.sin(angle) * distance;
+                    const rot = (Math.random() - 0.5) * 360;
+
+                    heart.style.setProperty('--tx', `${tx}px`);
+                    heart.style.setProperty('--ty', `${ty}px`);
+                    heart.style.setProperty('--rot', `${rot}deg`);
+
+                    document.body.appendChild(heart);
+
+                    // Clean up DOM element after animation finishes
+                    setTimeout(() => {
+                        heart.remove();
+                    }, 1600);
+                }
+            }
+
+            // Event Listeners for 'No' button (Desktop hover + Mobile touch/click)
+            noBtn.addEventListener('mouseover', dodgeButton);
+            noBtn.addEventListener('touchstart', dodgeButton, { passive: false });
+            noBtn.addEventListener('click', dodgeButton);
+
+            // Event Listener for 'Yes' button
+            yesBtn.addEventListener('click', () => {
+                // Hide the detached 'No' button if it's floating around
+                noBtn.style.display = 'none';
+
+                // Switch views
+                questionView.classList.add('hidden');
+                celebrationView.classList.remove('hidden');
+                celebrationView.classList.add('flex');
+
+                // Trigger multiple waves of heart explosions
+                triggerHeartExplosion();
+                setTimeout(triggerHeartExplosion, 400);
+                setTimeout(triggerHeartExplosion, 800);
+            });
+
+            // Reset experience on Replay
+            replayBtn.addEventListener('click', () => {
+                celebrationView.classList.add('hidden');
+                celebrationView.classList.remove('flex');
+                questionView.classList.remove('hidden');
+
+                // Reset states
+                dodgeCount = 0;
+                yesScale = 1;
+                yesBtn.style.transform = 'scale(1)';
+                subtext.innerText = "Please be honest... 🥺";
+
+                // Put 'No' button back into its original container
+                noBtn.style.display = 'inline-block';
+                noBtn.style.position = 'static';
+                noBtn.style.left = '';
+                noBtn.style.top = '';
+                yesBtn.parentElement.appendChild(noBtn);
+                isButtonDetached = false;
+            });
+
+            // Keep 'No' button inside screen if window is resized
+            window.addEventListener('resize', () => {
+                if (isButtonDetached && noBtn.style.display !== 'none') {
+                    dodgeButton();
+                }
+            });
+
+            // Initialize ambient background hearts
+            createAmbientHearts();
+        });
+    </script>
+</body>
+</html>
